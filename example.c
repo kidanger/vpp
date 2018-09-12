@@ -9,9 +9,9 @@ int main(int c, char** v) {
     assert(c == 3);
 
     // link to the pipeline
-    int w,h,d,n;
-    FILE* in = vpp_init_input(v[1], &w, &h, &d, &n);
-    FILE* out = vpp_init_output(v[2], w, h, d, n);
+    int w,h,d;
+    FILE* in = vpp_init_input(v[1], &w, &h, &d);
+    FILE* out = vpp_init_output(v[2], w, h, d);
     assert(in && out);
 
     // allocate memory for the frame and the accumulation

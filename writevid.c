@@ -15,8 +15,8 @@ int main(int c, char** v)
     const char* formatexpr = v[2];
 
     // link to the pipeline
-    int w,h,d,n;
-    FILE* in = vpp_init_input(v[1], &w, &h, &d, &n);
+    int w,h,d;
+    FILE* in = vpp_init_input(v[1], &w, &h, &d);
     assert(in);
 
     // allocate memory for the frame

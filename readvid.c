@@ -37,7 +37,7 @@ int main(int c, char** v)
     free(frame);
 
     // link to the pipeline
-    FILE* out = vpp_init_output(v[2], w, h, d, n);
+    FILE* out = vpp_init_output(v[2], w, h, d);
     assert(out);
 
     for (int i = 0; i < n; i++) {
