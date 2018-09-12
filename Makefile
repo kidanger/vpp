@@ -1,11 +1,29 @@
+CFLAGS ?= -march=native -O3 -Wall -Wextra
+CFLAGS += -I.
+LDLIBS = -lm
 
-all: readvid writevid example
+OBJ = vpp.o
+BIN = example readvid writevid vp
 
-readvid: readvid.o vpp.o iio.o
-	${CC} ${LDFLAGS} $^ -o $@ ${LDLIBS} -ltiff -ljpeg -lpng -lm
+BIN := $(addprefix bin/,$(BIN))
 
-writevid: writevid.o vpp.o iio.o
-	${CC} ${LDFLAGS} $^ -o $@ ${LDLIBS} -ltiff -ljpeg -lpng -lm
+default: $(BIN)
 
-example: example.o vpp.o
+bin/%: src/%.o $(OBJ)
+	$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+
+bin/readvid: src/readvid.o $(OBJ) src/iio.o
+	$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)  -ltiff -ljpeg -lpng -lm
+bin/writevid: src/writevid.o $(OBJ) src/iio.o
+	$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)  -ltiff -ljpeg -lpng -lm
+bin/vp: src/vp.o $(OBJ) src/iio.o
+	$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)  -ltiff -ljpeg -lpng -lm
+
+
+clean: ; @$(RM) $(BIN_ALL) bin/im src/*.o src/ftr/*.o src/misc/*.o
+.PRECIOUS: %.o
+
+DIRS = src
+.deps.mk: ; for i in $(DIRS);do cc -I. -MM $$i/*.c|sed "\:^[^ ]:s:^:$$i/:g";done>$@
+-include .deps.mk
 

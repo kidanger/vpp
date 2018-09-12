@@ -5,10 +5,10 @@ vpp is a video processing pipeline library.
 
 ```sh
 $ make
-$ ./readvid 'yourinput/*.png' - | ./example - - | ./writevid - output/%03d.tif
+$ ./bin/readvid 'yourinput/*.png' - | ./bin/example - - | ./bin/writevid - output/%03d.tif
 ```
 
-See `example.c` for an example of a recursive average using vpp.
+See `src/example.c` for an example of a recursive average using vpp.
 
 A pipeline is defined as a sequence of programs communicating using vpp's C functions through unix pipes (or files).
 A given program can have many inputs and outputs, allowing for complex pipelines.

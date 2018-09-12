@@ -48,11 +48,11 @@ err:
 
 int vpp_read_frame(FILE* in, float* frame, int w, int h, int d)
 {
-    return fread(frame, sizeof*frame, w*h*d, in) == w*h*d;
+    return fread(frame, sizeof*frame, w*h*d, in) == (size_t) w*h*d;
 }
 
 int vpp_write_frame(FILE* out, float* frame, int w, int h, int d)
 {
-    return fwrite(frame, sizeof*frame, w*h*d, out) == w*h*d;
+    return fwrite(frame, sizeof*frame, w*h*d, out) == (size_t) w*h*d;
 }
 
