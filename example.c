@@ -27,7 +27,8 @@ int main(int c, char** v) {
         }
 
         // send the frame to the next step
-        vpp_write_frame(out, buffer, w, h, d);
+        if (!vpp_write_frame(out, buffer, w, h, d))
+            break;
         num++;
     }
 

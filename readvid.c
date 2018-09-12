@@ -49,7 +49,8 @@ int main(int c, char** v)
         assert(od == d);
 
         // send the frame through the pipeline
-        vpp_write_frame(out, frame, w, h, d);
+        if (!vpp_write_frame(out, frame, w, h, d))
+            break;
 
         free(frame);
     }
