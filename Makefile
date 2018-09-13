@@ -3,7 +3,7 @@ CFLAGS += -I.
 LDLIBS = -lm
 
 OBJ = vpp.o
-BIN = example readvid writevid vp
+BIN = example readvid writevid vp vexec
 
 BIN := $(addprefix bin/,$(BIN))
 
@@ -16,7 +16,7 @@ bin/readvid: src/readvid.o $(OBJ) src/iio.o
 	$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)  -ltiff -ljpeg -lpng -lm
 bin/writevid: src/writevid.o $(OBJ) src/iio.o
 	$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)  -ltiff -ljpeg -lpng -lm
-bin/vp: src/vp.o $(OBJ) src/iio.o
+bin/vexec: src/vexec.o $(OBJ) src/iio.o
 	$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)  -ltiff -ljpeg -lpng -lm
 
 
