@@ -199,7 +199,7 @@ void timeinterval(int c, char** v)
         double diff = (end.tv_sec - start.tv_sec)
             + (end.tv_nsec - start.tv_nsec)/1000000000.;
         printf("%fs\n", diff);
-        end = start;
+        start = end;
     }
 }
 
