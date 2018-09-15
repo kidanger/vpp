@@ -8,6 +8,7 @@ FILE* vpp_init_input(const char* filename, int* w, int* h, int* d)
 {
     char tag[4];
     FILE* in = !strcmp(filename, "-") ? stdin : fopen(filename, "rb");
+    setvbuf(in, NULL, _IONBF, 0);
 
     if (!in)
         goto err;
@@ -29,6 +30,7 @@ FILE* vpp_init_output(const char* filename, int w, int h, int d)
 {
     char tag[4] = {VPP_TAG};
     FILE* out = !strcmp(filename, "-") ? stdout : fopen(filename, "wb");
+    setvbuf(out, NULL, _IONBF, 0);
 
     if (!out)
         goto err;
