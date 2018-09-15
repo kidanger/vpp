@@ -21,6 +21,11 @@ To load and save a video, readvid and writevid are provided (but can be replaced
 Release notes
 -------------
 
+* v2.2.0 - 2018/09/15
+	* add 'vlambda' (from the code of [plambda](https://github.com/mnhrdt/imscript))
+	* move 'vp exec' to 'vexec'
+	* fix a bug where the libc kept the header in buffer
+	
 * v2.1.0 - 2018/09/13
 	* add a 'vp' binary that contains many operators:
 		* basic blocks: take, repeat, first, last, skip, concat, timeinterval, average, count, max, min, sum
