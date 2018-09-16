@@ -503,6 +503,56 @@ void scan(int c, char** v)
     te_free(n);
 }
 
+void zip(int c, char** v)
+{
+    assert(c == 4);
+
+    int n = 2;
+    int ws[n], hs[n], ds[n];
+    FILE *ins[n];
+    if (!vpp_init_inputs(n, ins, v, ws, hs, ds)) {
+        return;
+    }
+
+    int w = ws[0];
+    int h = hs[0];
+    int d = ds[0];
+
+    float* frames[n];
+    for (int i = 0; i < n; i++) {
+        assert(w == ws[i] && h == hs[i] && d == ds[i]);
+        frames[i] = malloc(w*h*d*sizeof(float));
+    }
+
+    FILE* out = vpp_init_output(v[2], w, h, d);
+    assert(out);
+
+    double x, y;
+    te_variable vars[] = {{"x", &x, 0, 0}, {"y", &y, 0, 0}};
+    int err;
+    te_expr *expr = te_compile(v[3], vars, 2, &err);
+    if (!expr) {
+        fprintf(stderr, "parsing error in zip\n");
+        return;
+    }
+
+    while (1) {
+        for (int i = 0; i < n; i++) {
+            if (!vpp_read_frame(ins[i], frames[i], w, h, d)) {
+                return;
+            }
+        }
+        for (int i = 0; i < w*h*d; i++) {
+            x = frames[0][i];
+            y = frames[1][i];
+            frames[0][i] = te_eval(expr);
+        }
+        if (!vpp_write_frame(out, frames[0], w, h, d))
+            break;
+    }
+    te_free(expr);
+}
+
 void framereduce(int c, char** v)
 {
     assert(c == 3);
@@ -577,6 +627,8 @@ int main(int c, char** v)
         return reduce(c, v), 0;
     } else if (!strcmp(name, "scan")) {
         return scan(c, v), 0;
+    } else if (!strcmp(name, "zip")) {
+        return zip(c, v), 0;
     } else if (!strcmp(name, "framereduce")) {
         return framereduce(c, v), 0;
     }
