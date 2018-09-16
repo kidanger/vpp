@@ -15,11 +15,25 @@ A given program can have many inputs and outputs, allowing for complex pipelines
 
 To load and save a video, readvid and writevid are provided (but can be replaced with your own). They are using [iio](https://github.com/mnhrdt/iio) to load/save sequence of images.
 
+Another example (temporal difference of the 30th first frames):
 
+```sh
+$ mkfifo copy;
+$ readvid 'yourinput/*.png' - \
+  | vp take - - 30 \
+  | vp dup - - copy \
+  | vp skip - - 1 \
+  | vp zip - copy - 'x-y' \
+  | writevid - test/%04d.tif      
+```   
 
 
 Release notes
 -------------
+
+* v2.3.1 - 2018/09/16
+	* add operator 'vp zip'
+	* fix two issues with 'vp dup'
 
 * v2.3.0 - 2018/09/16
 	* add function 'vpp_init_inputs' to initialize multiple inputs at once, required for complex pipelines.
