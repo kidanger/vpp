@@ -5,12 +5,133 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/select.h>
+#include <sys/select.h>
+#include <fcntl.h>
 
 #include "tinyexpr.c"
+#include "bigbuf.c"
 
 #include "vpp.h"
 
-// many operators are inspired by http://reactivex.io/documentation/operators.html
+void dup_(int c, char** v)
+{
+    assert(c == 3);
+    int w,h,d;
+    FILE* in = vpp_init_input(v[0], &w, &h, &d);
+    FILE* outs[2];
+    outs[0] = vpp_init_output(v[1], w, h, d);
+    outs[1] = vpp_init_output(v[2], w, h, d);
+    assert(in && outs[0] && outs[1]);
+
+    struct bigbuf buffers[2] = {
+        bigbuf_init(1<<20),
+        bigbuf_init(1<<20),
+    };
+    int fds[2] = { fileno(outs[0]),  fileno(outs[1]) };
+    int fdmax = (fds[0] > fds[1] ? fds[0] : fds[1]) + 1;
+
+    /* pipes are write-blocking even if ready from select
+     * except in non-block mode (and with n > PIPE_BUF) */
+    for (int i = 0; i < 2; i++) {
+        int flags = fcntl(fds[i], F_GETFL, 0);
+        fcntl(fds[i], F_SETFL, flags | O_NONBLOCK);
+    }
+
+    float* frame = malloc(w*h*d*sizeof*frame);
+    while (1) {
+        if (in) {
+            // as long as we have no backlog for one output, we can read a frame
+            if (!vpp_read_frame(in, frame, w, h, d)) {
+                fclose(in);
+                in = NULL;
+            } else {
+                for (int i = 0; i < 2; i++) {
+                    bigbuf_write(&buffers[i], (char*) frame, w*h*d*sizeof(float));
+                }
+            }
+        }
+
+        while (bigbuf_has_data(&buffers[0]) && bigbuf_has_data(&buffers[1])) {
+            fd_set wset;
+            FD_ZERO(&wset);
+            for (int i = 0; i < 2; i++) {
+                FD_SET(fds[i], &wset);
+            }
+
+            if (select(fdmax, NULL, &wset, NULL, NULL) < 0)
+                return;
+
+            for (int i = 0; i < 2; i++) {
+                if (FD_ISSET(fds[i], &wset)) {
+                    char* data;
+                    size_t size = bigbuf_ask_read(&buffers[i], &data);
+                    ssize_t writes;
+                    if ((writes = write(fds[i], data, size)) < 0) {
+                        return;
+                    }
+
+                    bigbuf_commit_read(&buffers[i], writes);
+                }
+            }
+        }
+    }
+}
+
+void buf(int c, char** v)
+{
+    assert(c == 2);
+    int w,h,d;
+    FILE* in = vpp_init_input(v[0], &w, &h, &d);
+    FILE* out = vpp_init_output(v[1], w, h, d);
+    assert(in && out);
+
+    int fdin = fileno(in);
+    int fdout = fileno(out);
+    int fdmax = (fdin > fdout ? fdin : fdout) + 1;
+
+    struct bigbuf buf = bigbuf_init(1<<20);
+
+    float* frame = malloc(w*h*d*sizeof*frame);
+    while (fdin != -1 || bigbuf_has_data(&buf)) {
+        fd_set rset, wset;
+        FD_ZERO(&rset);
+        FD_ZERO(&wset);
+        if (fdin != -1)
+            FD_SET(fdin, &rset);
+        if (bigbuf_has_data(&buf))
+            FD_SET(fdout, &wset);
+
+        if (select(fdmax, &rset, &wset, NULL, NULL) < 0)
+            break;
+
+        if (fdin != -1 && FD_ISSET(fdin, &rset)) {
+            char* data;
+            size_t size = bigbuf_ask_write(&buf, &data);
+            ssize_t s = read(fdin, data, size);
+            if (s < 0)
+                break;
+
+            if (s == 0) { // end of file
+                fclose(in);
+                fdin = -1;
+            } else {
+                bigbuf_commit_write(&buf, s);
+            }
+        }
+
+        if (bigbuf_has_data(&buf) && FD_ISSET(fdout, &wset)) {
+            char* data;
+            size_t size = bigbuf_ask_read(&buf, &data);
+            ssize_t writes;
+            if ((writes = write(fdout, data, size)) < 0)
+                break;
+
+            bigbuf_commit_read(&buf, writes);
+        }
+    }
+    bigbuf_free(&buf);
+}
 
 void take(int c, char** v)
 {
@@ -28,6 +149,8 @@ void take(int c, char** v)
             || !vpp_write_frame(out, frame, w, h, d))
             break;
     }
+    fclose(in);
+    fclose(out);
 }
 
 void repeat(int c, char** v)
@@ -92,13 +215,17 @@ void skip(int c, char** v)
     float* frame = malloc(w*h*d*sizeof*frame);
 
     for (int i = 0; i < n; i++) {
-        if (!vpp_read_frame(in, frame, w, h, d))
-            return;
+        if (!vpp_read_frame(in, frame, w, h, d)) {
+            goto end;
+        }
     }
 
     while (vpp_read_frame(in, frame, w, h, d)
            && vpp_write_frame(out, frame, w, h, d))
         ;
+end:
+    fclose(in);
+    fclose(out);
 }
 
 void concat(int c, char** v)
@@ -378,7 +505,12 @@ int main(int c, char** v)
     char* name = v[1];
     c -= 2;
     v += 2;
+    // many operators are inspired by http://reactivex.io/documentation/operators.html
     if (0) {
+    } else if (!strcmp(name, "buf")) {
+        return buf(c, v), 0;
+    } else if (!strcmp(name, "dup")) {
+        return dup_(c, v), 0;
     } else if (!strcmp(name, "take")) {
         return take(c, v), 0;
     } else if (!strcmp(name, "repeat")) {
