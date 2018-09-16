@@ -44,7 +44,7 @@ void dup_(int c, char** v)
     }
 
     float* frame = malloc(w*h*d*sizeof*frame);
-    while (1) {
+    while (n) {
         if (in) {
             // as long as we have no backlog for one output, we can read a frame
             if (!vpp_read_frame(in, frame, w, h, d)) {
@@ -55,9 +55,22 @@ void dup_(int c, char** v)
                     bigbuf_write(&buffers[i], (char*) frame, w*h*d*sizeof(float));
                 }
             }
+        } else {
+            // someone is starving, but there is no more frames
+            // this means we need to close it
+            for (int i = 0; i < n; i++) {
+                if (!bigbuf_has_data(&buffers[i])) {
+                    close(fds[i]);
+                    fds[i] = -1;
+                    bigbuf_free(&buffers[i]);
+                    memmove(fds+i, fds+i+1, (n-i-1)*sizeof(*fds));
+                    memmove(buffers+i, buffers+i+1, (n-i-1)*sizeof(*buffers));
+                    n--;
+                }
+            }
         }
 
-        while (1) {
+        while (n) {
             // if someone is starving, go get some frames
             int starving = 0;
             for (int i = 0; i < n; i++) {
