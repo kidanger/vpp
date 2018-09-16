@@ -21,6 +21,10 @@ To load and save a video, readvid and writevid are provided (but can be replaced
 Release notes
 -------------
 
+* v2.3.0 - 2018/09/16
+	* add function 'vpp_init_inputs' to initialize multiple inputs at once, required for complex pipelines.
+	* add two vp operators: dup and buf
+
 * v2.2.0 - 2018/09/15
 	* add 'vlambda' (from the code of [plambda](https://github.com/mnhrdt/imscript))
 	* move 'vp exec' to 'vexec'
