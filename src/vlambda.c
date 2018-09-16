@@ -50,8 +50,9 @@ static int main_videos(int c, char **v)
 
     while (1) {
         FORI(n) {
-            if (!vpp_read_frame(ins[i], x[i], w[i], h[i], pd[i]))
+            if (!vpp_read_frame(ins[i], x[i], w[i], h[i], pd[i])) {
                 return 0;
+            }
         }
 
         int opd = run_program_vectorially(out, pdreal, p, x, w, h, pd);

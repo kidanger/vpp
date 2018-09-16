@@ -8,6 +8,8 @@
 #include <sys/select.h>
 #include <sys/select.h>
 #include <fcntl.h>
+#include <signal.h>
+#include <errno.h>
 
 #include "tinyexpr.c"
 #include "bigbuf.c"
@@ -16,10 +18,13 @@
 
 void dup_(int c, char** v)
 {
+    signal(SIGPIPE, SIG_IGN);
+
     assert(c == 3);
     int w,h,d;
     FILE* in = vpp_init_input(v[0], &w, &h, &d);
-    FILE* outs[2];
+    int n = 2;
+    FILE* outs[n];
     outs[0] = vpp_init_output(v[1], w, h, d);
     outs[1] = vpp_init_output(v[2], w, h, d);
     assert(in && outs[0] && outs[1]);
@@ -46,32 +51,50 @@ void dup_(int c, char** v)
                 fclose(in);
                 in = NULL;
             } else {
-                for (int i = 0; i < 2; i++) {
+                for (int i = 0; i < n; i++) {
                     bigbuf_write(&buffers[i], (char*) frame, w*h*d*sizeof(float));
                 }
             }
         }
 
-        while (bigbuf_has_data(&buffers[0]) && bigbuf_has_data(&buffers[1])) {
+        while (1) {
+            // if someone is starving, go get some frames
+            int starving = 0;
+            for (int i = 0; i < n; i++) {
+                starving |= !bigbuf_has_data(&buffers[i]);
+            }
+            if (starving)
+                break;
+
+            // wait for some pipes to be ready
             fd_set wset;
             FD_ZERO(&wset);
-            for (int i = 0; i < 2; i++) {
+            for (int i = 0; i < n; i++) {
                 FD_SET(fds[i], &wset);
             }
-
             if (select(fdmax, NULL, &wset, NULL, NULL) < 0)
                 return;
 
-            for (int i = 0; i < 2; i++) {
+            for (int i = 0; i < n; i++) {
                 if (FD_ISSET(fds[i], &wset)) {
                     char* data;
                     size_t size = bigbuf_ask_read(&buffers[i], &data);
                     ssize_t writes;
                     if ((writes = write(fds[i], data, size)) < 0) {
-                        return;
+                        // one of the reader has finished, remove it from the list
+                        if (errno == EPIPE) {
+                            close(fds[i]);
+                            fds[i] = -1;
+                            bigbuf_free(&buffers[i]);
+                            memmove(fds+i, fds+i+1, (n-i-1)*sizeof(*fds));
+                            memmove(buffers+i, buffers+i+1, (n-i-1)*sizeof(*buffers));
+                            n--;
+                        } else {
+                            return;
+                        }
+                    } else {
+                        bigbuf_commit_read(&buffers[i], writes);
                     }
-
-                    bigbuf_commit_read(&buffers[i], writes);
                 }
             }
         }
