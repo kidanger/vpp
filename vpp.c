@@ -13,11 +13,15 @@ static FILE* open_input(const char* filename)
     // we don't want to block on opening pipes since the other end
     // will block until we open it (causing deadlocks with 2 pipes)
     int fd = !strcmp(filename, "-") ? 0 : open(filename, O_RDONLY, O_NONBLOCK);
+    if (fd == -1)
+        return NULL;
+
     int flags = fcntl(fd, F_GETFL, 0);
     fcntl(fd, F_SETFL, flags & ~O_NONBLOCK);
 
     FILE* in = fdopen(fd, "rb");
-    setvbuf(in, NULL, _IONBF, 0);
+    if (in)
+        setvbuf(in, NULL, _IONBF, 0);
     return in;
 }
 
