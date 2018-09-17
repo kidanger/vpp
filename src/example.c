@@ -1,4 +1,3 @@
-#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -6,13 +5,17 @@
 #include "vpp.h"
 
 int main(int c, char** v) {
-    assert(c == 3);
+    if (c != 3)
+        return fprintf(stderr, "usage: example input output\n"), 1;
 
     // link to the pipeline
     int w,h,d;
     FILE* in = vpp_init_input(v[1], &w, &h, &d);
+    if (!in)
+        return fprintf(stderr, "example: cannot initialize input '%s'\n", v[0]), 1;
     FILE* out = vpp_init_output(v[2], w, h, d);
-    assert(in && out);
+    if (!out)
+        return fprintf(stderr, "example: cannot initialize output '%s'\n", v[1]), 1;
 
     // allocate memory for the frame and the accumulation
     float* frame = malloc(w*h*d*sizeof*frame);

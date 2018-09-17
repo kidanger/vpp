@@ -7,7 +7,7 @@
 static int main_videos(int c, char **v)
 {
     if (c < 2) {
-        fprintf(stderr, "usage:\n\t%s in1 in2 ... \"plambda\"\n", *v);
+        fprintf(stderr, "usage:\n\t%s in1 in2 ... \"plambda\" [-o output]\n", *v);
         //                          0 1   2         c-1
         return EXIT_FAILURE;
     }
@@ -30,8 +30,8 @@ static int main_videos(int c, char **v)
     int w[n], h[n], pd[n];
     FILE *ins[n];
     float *x[n];
-    if (!vpp_init_inputs(n, ins, v+1, w, h, pd)) {
-        return 1;
+    if (!vpp_init_inputs(n, ins, (const char**)v+1, w, h, pd)) {
+        return fprintf(stderr, "vlambda: cannot initialize one of the inputs\n"), 1;
     }
     FORI(n) {
         x[i] = malloc(w[i]*h[i]*pd[i]*sizeof(float));
@@ -45,7 +45,8 @@ static int main_videos(int c, char **v)
 
     int pdreal = eval_dim(p, x, pd);
     FILE* fileout = vpp_init_output(filename_out, *w, *h, pdreal);
-    assert(fileout);
+    if (!fileout)
+        return fprintf(stderr, "vlambda: cannot initialize output '%s'\n", filename_out), 1;
     float *out = xmalloc(*w * *h * pdreal * sizeof*out);
 
     while (1) {

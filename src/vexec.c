@@ -1,4 +1,3 @@
-#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -9,21 +8,28 @@
 int main(int c, char** v)
 {
     c--; v++;
-    assert(c >= 5); // assumes one or more inputs and one output
+    if (c < 5)
+        return fprintf(stderr, "usage: vexec input1 input1-file [input2 input2-files...] command output output-file\n"), 1;
 
-    int w,h,d;
     int ninputs = (c - 2) / 2;
-    char* files[ninputs+1];
     FILE* ins[ninputs];
-    ins[0] = vpp_init_input(v[0], &w, &h, &d);
-    assert(ins[0]);
-    for (int i = 1; i < ninputs; i++) {
-        int w2,h2,d2;
-        ins[i] = vpp_init_input(v[i*2], &w2, &h2, &d2);
-        assert(ins[i]);
-        assert(w == w2 && h == h2 && d == d2);
+    int ws[ninputs], hs[ninputs], ds[ninputs];
+    const char* inputfiles[ninputs];
+    for (int i = 0; i < ninputs; i++) {
+        inputfiles[i] = v[i*2];
+    }
+    if (!vpp_init_inputs(ninputs, ins, inputfiles, ws, hs, ds))
+        return fprintf(stderr, "vexec: cannot initialize one of the inputs\n"), 1;
+
+    int w = ws[0];
+    int h = hs[0];
+    int d = ds[0];
+    for (int i = 0; i < ninputs; i++) {
+        if (w != ws[i] || h != hs[i] || d != ds[i])
+            return fprintf(stderr, "vexec: input %d does not have the same dimensions\n", i+1), 1;
     }
 
+    char* files[ninputs+1];
     for (int i = 0; i < ninputs+1; i++) {
         files[i] = v[1+i*2];
     }
@@ -52,14 +58,17 @@ int main(int c, char** v)
 
         int ow2, oh2, od2;
         float* result = iio_read_image_float_vec(files[ninputs], &ow2, &oh2, &od2);
+
         if (!out) {
             ow = ow2;
             oh = oh2;
             od = od2;
             out = vpp_init_output(v[c-3], ow, oh, od);
-            assert(out);
+            if (!out)
+                return fprintf(stderr, "vexec: cannot initialize output '%s'\n", v[c-3]), 1;
+        } else if (ow != ow2 || oh != oh2 || od != od2) {
+                return fprintf(stderr, "vexec: a frame does not have the same size\n"), 1;
         }
-        assert(ow == ow2 && oh == oh2 && od == od2);
 
         if (!vpp_write_frame(out, result, ow, oh, od))
             break;

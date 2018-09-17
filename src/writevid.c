@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
 #include <glob.h>
 
 #include "iio.h"
@@ -11,13 +10,15 @@
 
 int main(int c, char** v)
 {
-    assert(c == 3);
+    if (c != 3)
+        return fprintf(stderr, "usage: readvid input format\n"), 1;
     const char* formatexpr = v[2];
 
     // link to the pipeline
     int w,h,d;
     FILE* in = vpp_init_input(v[1], &w, &h, &d);
-    assert(in);
+    if (!in)
+        return fprintf(stderr, "writevid: cannot initialize input '%s'\n", v[1]), 1;
 
     // allocate memory for the frame
     float* frame = malloc(w*h*d*sizeof*frame);

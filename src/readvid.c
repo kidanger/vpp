@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
 #include <glob.h>
 
 #include "iio.h"
@@ -24,12 +23,14 @@ static char** get_filenames(const char* globexpr, int* n)
 
 int main(int c, char** v)
 {
-    assert(c == 3);
+    if (c != 3)
+        return fprintf(stderr, "usage: readvid glob output\n"), 1;
 
     // get filenames from the globbing expression
     int n;
     char** files = get_filenames(v[1], &n);
-    assert(n > 0);
+    if (n <= 0)
+        return fprintf(stderr, "readvid: no images found from globbing\n"), 1;
 
     // load the first frame so that we know the size of the frames
     int w, h, d;
@@ -38,15 +39,15 @@ int main(int c, char** v)
 
     // link to the pipeline
     FILE* out = vpp_init_output(v[2], w, h, d);
-    assert(out);
+    if (!out)
+        return fprintf(stderr, "readvid: cannot initialize output '%s'\n", v[2]), 1;
 
     for (int i = 0; i < n; i++) {
         // load the frame and check dimensions
         int ow, oh, od;
         frame = iio_read_image_float_vec(files[i], &ow, &oh, &od);
-        assert(ow == w);
-        assert(oh == h);
-        assert(od == d);
+        if (ow != w || oh != h || od != d)
+            return fprintf(stderr, "readvid: image '%s' does not have the same size\n", files[i]), 1;
 
         // send the frame through the pipeline
         if (!vpp_write_frame(out, frame, w, h, d))
