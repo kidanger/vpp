@@ -31,6 +31,12 @@ $ readvid 'yourinput/*.png' - \
 Release notes
 -------------
 
+* v2.3.2 - 2018/09/17
+	* fix an issue with vpp_init_input introduced in v2.2.0
+	* improve error reporting
+	* vpp_init_input now returns NULL if the frame size is invalid (it should be positive)
+		* this might indicate that a writer wrongly initialized its output
+
 * v2.3.1 - 2018/09/16
 	* add operator 'vp zip'
 	* fix two issues with 'vp dup'
