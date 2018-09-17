@@ -34,6 +34,8 @@ static int read_header(FILE* in, int* w, int* h, int*d )
         || !fread(h, sizeof*h, 1, in)
         || !fread(d, sizeof*d, 1, in))
         return 0;
+    if (*w <= 0 || *h <= 0 || *d <= 0)
+        return 0;
     return 1;
 }
 
