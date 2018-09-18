@@ -2,6 +2,10 @@ CFLAGS ?= -march=native -O3 -Wall -Wextra
 CFLAGS += -I.
 LDLIBS = -lm
 
+ifeq (,$(shell $(CC) $(CFLAGS) -dM -E -< /dev/null | grep __STDC_VERSION_))
+CFLAGS := $(CFLAGS) -std=gnu99
+endif
+
 OBJ = vpp.o
 BIN = example readvid writevid vp vexec vlambda
 
