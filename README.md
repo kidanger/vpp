@@ -1,6 +1,8 @@
 vpp
 ===
 
+[![Build Status](https://travis-ci.com/kidanger/vpp.svg?branch=master)](https://travis-ci.com/kidanger/vpp)
+
 vpp is a video processing pipeline library.
 
 ```sh
