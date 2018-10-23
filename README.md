@@ -29,9 +29,22 @@ $ readvid 'yourinput/*.png' - \
   | writevid - test/%04d.tif      
 ```   
 
+When `vpp.c` is compiled with `-DVPP_OUTPUT_DOT`, vpp can output a Graphviz dot file to draw the pipeline:
+
+```bash
+$ export VPP_OUTPUT_DOT=graph.dot
+$ rm graph.dot   # if it still exists from a previous execution
+$ <execute your pipeline>
+$ echo "digraph { $(cat graph.dot) }" | dot -Tpng >pipeline.png
+```
+However, in order not to break the API, while the environment variable is set, programs compiled with and without the option are incompatible with each others.
 
 Release notes
 -------------
+
+* v2.4.0 - 2018/10/23
+	* draw pipeline graphs using dot (enable with VPP_OUTPUT_DOT)
+	* improve compatibility with non-linux systems (thanks @mnhrdt)
 
 * v2.3.2 - 2018/09/17
 	* fix an issue with vpp_init_input introduced in v2.2.0

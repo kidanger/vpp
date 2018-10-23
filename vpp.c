@@ -6,6 +6,32 @@
 
 #define VPP_TAG "VPP"
 
+#ifdef VPP_OUTPUT_DOT
+// taken from iio
+// this compatible only with some OSes
+#include <stdlib.h>
+#include <unistd.h>
+static const char *emptystring = "";
+static const char *myname(void)
+{
+#define n 0x29a
+    static char buf[n];
+    long p = getpid();
+    snprintf(buf, n, "/proc/%ld/cmdline", p);
+    FILE *f = fopen(buf, "r");
+    if (!f) return emptystring;
+    int c, i = 0;
+    while ((c = fgetc(f)) != EOF && i < n) {
+#undef n
+        buf[i] = c ? c : ' ';
+        i += 1;
+    }
+    if (i) buf[i-1] = '\0';
+    fclose(f);
+    return buf;
+}
+#endif
+
 static FILE* open_input(const char* filename)
 {
     // open the file is non blocking mode in case this is a pipe
@@ -35,6 +61,24 @@ static int read_header(FILE* in, int* w, int* h, int*d )
         return 0;
     if (*w <= 0 || *h <= 0 || *d <= 0)
         return 0;
+
+#ifdef VPP_OUTPUT_DOT
+    if (getenv("VPP_OUTPUT_DOT")) {
+        char parent[2048];
+        char* p = parent;
+        do {
+            if (p - parent >= (long)sizeof(parent) || fread(p, 1, 1, in) != 1)
+                return 0;
+        } while (*p && p++);
+        FILE* dot = fopen(getenv("VPP_OUTPUT_DOT"), "a");
+        if (dot) {
+            fprintf(dot, "\"%s\" -> \"%s\" [label=\"%dx%dx%d\"];\n",
+                    parent, myname(), *w, *h, *d);
+            fclose(dot);
+        }
+    }
+#endif
+
     return 1;
 }
 
@@ -88,6 +132,15 @@ FILE* vpp_init_output(const char* filename, int w, int h, int d)
         || !fwrite(&h, sizeof h, 1, out)
         || !fwrite(&d, sizeof d, 1, out))
         goto err;
+
+#ifdef VPP_OUTPUT_DOT
+    if (getenv("VPP_OUTPUT_DOT")) {
+        const char* n = myname();
+        size_t len = strlen(n) + 1;
+        if (fwrite(n, 1, len, out) != len)
+            goto err;
+    }
+#endif
 
     return out;
 err:

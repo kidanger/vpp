@@ -26,7 +26,7 @@ bin/vlambda: src/vlambda.o $(OBJ) src/iio.o
 	$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)  -ltiff -ljpeg -lpng -lm
 
 
-clean: ; @$(RM) $(BIN_ALL) bin/im src/*.o src/ftr/*.o src/misc/*.o
+clean: ; @$(RM) ${BIN} src/*.o vpp.o
 .PRECIOUS: %.o
 
 DIRS = src
