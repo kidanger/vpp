@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#define VPP_IMPLEMENTATION
 #include "vpp.h"
 
 int main(int c, char** v) {

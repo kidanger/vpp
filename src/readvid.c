@@ -4,6 +4,7 @@
 #include <glob.h>
 
 #include "iio.h"
+#define VPP_IMPLEMENTATION
 #include "vpp.h"
 
 static char** get_filenames(const char* globexpr, int* n)

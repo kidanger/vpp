@@ -6,6 +6,7 @@
 #include <glob.h>
 
 #include "iio.h"
+#define VPP_IMPLEMENTATION
 #include "vpp.h"
 
 int main(int c, char** v)

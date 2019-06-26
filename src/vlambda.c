@@ -1,4 +1,5 @@
 #include <stdio.h>
+#define VPP_IMPLEMENTATION
 #include "vpp.h"
 
 #define HIDE_ALL_MAINS

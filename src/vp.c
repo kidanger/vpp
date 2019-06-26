@@ -13,6 +13,7 @@
 #include "tinyexpr.c"
 #include "bigbuf.c"
 
+#define VPP_IMPLEMENTATION
 #include "vpp.h"
 
 void dup_(int c, char** v)

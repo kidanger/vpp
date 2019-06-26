@@ -6,27 +6,26 @@ ifeq (,$(shell $(CC) $(CFLAGS) -dM -E -< /dev/null | grep __STDC_VERSION_))
 CFLAGS := $(CFLAGS) -std=gnu99
 endif
 
-OBJ = vpp.o
 BIN = example readvid writevid vp vexec vlambda
 
 BIN := $(addprefix bin/,$(BIN))
 
 default: $(BIN)
 
-bin/%: src/%.o $(OBJ)
+bin/%: src/%.o
 	$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
-bin/readvid: src/readvid.o $(OBJ) src/iio.o
+bin/readvid: src/readvid.o src/iio.o
 	$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)  -ltiff -ljpeg -lpng -lm
-bin/writevid: src/writevid.o $(OBJ) src/iio.o
+bin/writevid: src/writevid.o src/iio.o
 	$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)  -ltiff -ljpeg -lpng -lm
-bin/vexec: src/vexec.o $(OBJ) src/iio.o
+bin/vexec: src/vexec.o src/iio.o
 	$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)  -ltiff -ljpeg -lpng -lm
-bin/vlambda: src/vlambda.o $(OBJ) src/iio.o
+bin/vlambda: src/vlambda.o src/iio.o
 	$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)  -ltiff -ljpeg -lpng -lm
 
 
-clean: ; @$(RM) ${BIN} src/*.o vpp.o
+clean: ; @$(RM) ${BIN} src/*.o
 .PRECIOUS: %.o
 
 DIRS = src
