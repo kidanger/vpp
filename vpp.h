@@ -5,6 +5,8 @@
 extern "C" {
 #endif
 
+#include <stdio.h>
+
 FILE* vpp_init_input(const char* filename, int* w, int* h, int* d);
 int vpp_init_inputs(int n, FILE** files, const char** filenames, int* w, int* h, int* d);
 
@@ -15,7 +17,6 @@ int vpp_read_frame(FILE* in, float* frame, int w, int h, int d);
 int vpp_write_frame(FILE* out, float* frame, int w, int h, int d);
 
 #ifdef VPP_IMPLEMENTATION
-#include <stdio.h>
 #include <string.h>
 #include <fcntl.h> // open, fnctl
 
