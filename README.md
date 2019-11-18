@@ -32,7 +32,7 @@ $ readvid 'yourinput/*.png' - \
 Release notes
 -------------
 
-* current
+* v2.5.0 - 2019/11/18
 	* vpp is now a single header library (use #define VPP_IMPLEMENTATION before including vpp.h)
 	* pipeline drawing with VPP_OUTPUT_DOT has been removed
 	* support inclusion of vpp.h from C++
