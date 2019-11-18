@@ -36,6 +36,7 @@ Release notes
 	* vpp is now a single header library (use #define VPP_IMPLEMENTATION before including vpp.h)
 	* pipeline drawing with VPP_OUTPUT_DOT has been removed
 	* support inclusion of vpp.h from C++
+	* update iio
 
 * v2.4.0 - 2018/10/23
 	* draw pipeline graphs using dot (enable with VPP_OUTPUT_DOT)
